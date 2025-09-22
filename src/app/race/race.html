@@ -1,0 +1,11 @@
+<div>
+  <h2>{{ raceModel().name }}</h2>
+  <p>{{ raceModel().startInstant | fromNow }}</p>
+  <div class="row">
+    @for (pony of raceModel().ponies; track pony.id) {
+      <div class="col-sm-2">
+        <pr-pony [ponyModel]="pony" />
+      </div>
+    }
+  </div>
+</div>
