@@ -25,4 +25,15 @@ export class UserService {
   authenticate(login: string, password: string): Observable<UserModel> {
     return this.http.post<UserModel>(this.apiRoute + '/api/users/authentication', { login, password });
   }
+
+  /**
+   * Inscrire un utilisateur
+   * @param login
+   * @param password
+   * @param birthYear
+   * @returns
+   */
+  register(login: string, password: string, birthYear: number): Observable<UserModel> {
+    return this.http.post<UserModel>(this.apiRoute + '/api/users', { login, password, birthYear });
+  }
 }
