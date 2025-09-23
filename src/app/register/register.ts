@@ -2,16 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../user-service';
+import { BirthYearInput } from '../birth-year-input/birth-year-input';
 
 function passwordMatch(control: AbstractControl<{ password: string; confirmPassword: string }>): ValidationErrors | null {
-  console.log(control.value.password);
-  console.log(control.value.confirmPassword);
   return control.value.password === control.value.confirmPassword ? null : { matchingError: true };
 }
 
 @Component({
   selector: 'pr-register',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, BirthYearInput],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
@@ -48,7 +47,7 @@ export class Register {
       },
       { validators: [passwordMatch] }
     ),
-    birthYear: [null as number | null, [Validators.required, Validators.min(1900), Validators.max(new Date().getFullYear())]]
+    birthYear: [null as number | null, [Validators.required]]
   });
 
   /**

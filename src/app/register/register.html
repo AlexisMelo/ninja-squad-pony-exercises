@@ -41,12 +41,13 @@
 
   <div class="mb-3">
     <label for="birthYear" class="form-label">Birth Year</label>
-    <input type="number" id="birthYear" class="form-control" formControlName="birthYear" />
+    <pr-birth-year-input class="form-control" inputId="birthYear" formControlName="birthYear" />
+
     @if (userForm.controls.birthYear.dirty) {
       @if (userForm.controls.birthYear.hasError('required')) {
         <div class="text-danger" id="birth-year-required-error">Birth year is required</div>
       }
-      @if (userForm.controls.birthYear.hasError('min') || userForm.controls.birthYear.hasError('max')) {
+      @if (userForm.controls.birthYear.hasError('invalidYear')) {
         <div class="text-danger" id="birth-year-invalid-error">This is not a valid year</div>
       }
     }

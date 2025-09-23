@@ -1,0 +1,16 @@
+<div class="row d-flex align-items-center">
+  <div class="col-2">
+    <input
+      [id]="inputId()"
+      [value]="value()"
+      [disabled]="disabled()"
+      (blur)="onTouched()"
+      (input)="onBirthYearChange($event)"
+      class="form-control"
+      type="number"
+    />
+  </div>
+  <div class="col formatted-year">
+    {{ year() }}
+  </div>
+</div>

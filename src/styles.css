@@ -2,10 +2,11 @@
 @import 'bootstrap/dist/css/bootstrap.css';
 @import '@fortawesome/fontawesome-free/css/all.css';
 
-input.ng-dirty.ng-invalid {
-  border: 1px solid red;
-}
-
 .invalid-feedback {
   display: block;
+}
+
+input.ng-dirty.ng-invalid,
+pr-birth-year-input.ng-dirty.ng-invalid input {
+  border: 1px solid red;
 }
