@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { environment } from '../environments/environment';
 import { UserService } from './user-service';
 import { UserModel } from './models/user.model';
 
@@ -34,7 +35,7 @@ describe('UserService', () => {
     const userService = TestBed.inject(UserService);
     userService.authenticate('cedric', 'hello').subscribe(fetchedUser => (actualUser = fetchedUser));
 
-    const req = http.expectOne({ method: 'POST', url: 'https://ponyracer.ninja-squad.com/api/users/authentication' });
+    const req = http.expectOne({ method: 'POST', url: `${environment.baseUrl}/api/users/authentication` });
     expect(req.request.body).toEqual({ login: 'cedric', password: 'hello' });
     req.flush(user);
 
@@ -50,7 +51,7 @@ describe('UserService', () => {
     const userService = TestBed.inject(UserService);
     userService.register(user.login, 'password', 1986).subscribe(fetchedUser => (actualUser = fetchedUser));
 
-    const req = http.expectOne({ method: 'POST', url: 'https://ponyracer.ninja-squad.com/api/users' });
+    const req = http.expectOne({ method: 'POST', url: `${environment.baseUrl}/api/users` });
     expect(req.request.body).toEqual({ login: user.login, password: 'password', birthYear: 1986 });
     req.flush(user);
 

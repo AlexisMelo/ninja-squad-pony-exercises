@@ -1,1 +1,1 @@
-{"pack":"81","id":18,"title":"Remember me","specs":[{"name":"src/app/user-service.spec.ts","hash":"1d7fbde2dea53e258b8e114f1d580ea01415d1369d2389d34f61626ed33117d1"}]}
+{"pack":"81","id":20,"title":"HTTP with authentication","specs":[{"name":"src/app/user-service.spec.ts","hash":"a0482008f75b065d09266dbc3680a8cfdfb1dc6bbdb36e5ba1c4af1895de0dbe"},{"name":"src/app/jwt-interceptor.spec.ts","hash":"e43d76a1810d5265d6c9e2a99803bca9d7db0d4b7bc34587cc2f70062a87af4d"}]}
