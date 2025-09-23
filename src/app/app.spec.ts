@@ -1,5 +1,7 @@
 import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { App } from './app';
 import { Menu } from './menu/menu';
@@ -7,7 +9,12 @@ import { Menu } from './menu/menu';
 describe('App', () => {
   beforeEach(() =>
     TestBed.configureTestingModule({
-      providers: [{ provide: ComponentFixtureAutoDetect, useValue: true }, provideRouter([])]
+      providers: [
+        { provide: ComponentFixtureAutoDetect, useValue: true },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([])
+      ]
     })
   );
 

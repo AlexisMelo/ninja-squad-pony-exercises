@@ -5,11 +5,25 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div id="navbar" class="navbar-collapse" [class.collapse]="navbarCollapsed()">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/races">Races</a>
-        </li>
-      </ul>
+      @if (user(); as user) {
+        <ul class="navbar-nav me-auto">
+          <li class="navbar-text">
+            <span id="current-user" class="me-2">
+              {{ user.login }}
+              <span class="fa fa-star"></span>
+              {{ user.money | number }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <button id="logout-link" type="button" class="btn nav-link" aria-label="Logout" (click)="logout()">
+              <span class="fa fa-power-off"></span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/races">Races</a>
+          </li>
+        </ul>
+      }
     </div>
   </div>
 </nav>
