@@ -6,6 +6,7 @@ import { UserModel } from './models/user.model';
 
 describe('UserService', () => {
   let http: HttpTestingController;
+  let localStorageGetItem: jasmine.Spy<(key: string) => string | null>;
 
   const user = {
     id: 1,
@@ -16,6 +17,8 @@ describe('UserService', () => {
   };
 
   beforeEach(() => {
+    localStorageGetItem = spyOn(Storage.prototype, 'getItem');
+    localStorageGetItem.and.returnValue(null);
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()]
     });
@@ -24,7 +27,9 @@ describe('UserService', () => {
 
   afterAll(() => http.verify());
 
-  it('should authenticate a user', () => {
+  it('should authenticate and store a user', () => {
+    spyOn(Storage.prototype, 'setItem');
+
     let actualUser: UserModel | undefined;
     const userService = TestBed.inject(UserService);
     userService.authenticate('cedric', 'hello').subscribe(fetchedUser => (actualUser = fetchedUser));
@@ -35,6 +40,9 @@ describe('UserService', () => {
 
     expect(actualUser).withContext('The observable should return the user').toBe(user);
     expect(userService.currentUser()).toEqual(user);
+
+    TestBed.tick();
+    expect(Storage.prototype.setItem).toHaveBeenCalledWith('rememberMe', JSON.stringify(user));
   });
 
   it('should register a user', () => {
@@ -49,14 +57,29 @@ describe('UserService', () => {
     expect(actualUser).withContext('You should emit the user.').toBe(user);
   });
 
-  it('should logout the user', () => {
-    // log in the user
+  it('should retrieve a user if one is stored', () => {
+    localStorageGetItem.and.returnValue(JSON.stringify(user));
     const userService = TestBed.inject(UserService);
-    userService.authenticate('cedric', 'hello').subscribe();
-    http.expectOne({ method: 'POST', url: 'https://ponyracer.ninja-squad.com/api/users/authentication' }).flush(user);
+    expect(userService.currentUser()).toEqual(user);
+    expect(localStorageGetItem).toHaveBeenCalledWith('rememberMe');
+  });
+
+  it('should retrieve no user if none stored', () => {
+    const userService = TestBed.inject(UserService);
+    expect(userService.currentUser()).toBeUndefined();
+  });
+
+  it('should logout the user', () => {
+    spyOn(Storage.prototype, 'removeItem');
+    localStorageGetItem.and.returnValue(JSON.stringify(user));
+    const userService = TestBed.inject(UserService);
+    expect(userService.currentUser()).toEqual(user);
 
     userService.logout();
 
     expect(userService.currentUser()).toBeUndefined();
+
+    TestBed.tick();
+    expect(Storage.prototype.removeItem).toHaveBeenCalledWith('rememberMe');
   });
 });

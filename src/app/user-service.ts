@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { UserModel } from './models/user.model';
 import { HttpClient } from '@angular/common/http';
@@ -20,12 +20,27 @@ export class UserService {
   /**
    * Utilisateur courant (privé)
    */
-  private readonly user = signal<UserModel | undefined>(undefined);
+  private readonly user = signal<UserModel | undefined>(this.retrieveUser());
 
   /**
    * Utilisateur courant
    */
   public readonly currentUser = this.user.asReadonly();
+
+  /**
+   * Constructeur
+   */
+  constructor() {
+    effect(() => {
+      const user = this.user();
+
+      if (user) {
+        localStorage.setItem('rememberMe', JSON.stringify(this.user()));
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
+    });
+  }
 
   /**
    * Authentification de l'utilisateur
@@ -54,5 +69,18 @@ export class UserService {
    */
   logout() {
     this.user.set(undefined);
+  }
+
+  /**
+   * Récupère l'utilisateur connecté dans le local storage, si il existe
+   * @returns
+   */
+  public retrieveUser() {
+    const user = localStorage.getItem('rememberMe');
+
+    if (!user) return;
+
+    const userUnserialized = JSON.parse(user) as UserModel;
+    return userUnserialized;
   }
 }

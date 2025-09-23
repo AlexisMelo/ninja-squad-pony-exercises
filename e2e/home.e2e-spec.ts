@@ -2,28 +2,21 @@ import { expect, Page, test } from '@playwright/test';
 
 test.describe('Home page', () => {
   async function login(page: Page) {
-    await page.goto('/login');
-    await page.locator('input').first().fill('cedric');
-    await page.locator('input[type=password]').fill('password');
-    const authenticationResponse = page.waitForResponse('**/api/users/authentication');
-    await page.locator('form > button').click();
-    await authenticationResponse;
-  }
-
-  test.beforeEach(async ({ page }) => {
-    await page.route('**/api/users/authentication', async route => {
-      await route.fulfill({
-        status: 200,
-        json: {
+    await page.evaluate(() =>
+      localStorage.setItem(
+        'rememberMe',
+        JSON.stringify({
           id: 1,
           login: 'cedric',
           money: 1000,
           registrationInstant: '2015-12-01T11:00:00Z',
           token: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjF9.5cAW816GUAg3OWKWlsYyXI4w3fDrS5BpnmbyBjVM7lo'
-        }
-      });
-    });
+        })
+      )
+    );
+  }
 
+  test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
 
@@ -40,11 +33,12 @@ test.describe('Home page', () => {
   });
 
   test('should display a navbar collapsed on small screen', async ({ page }) => {
+    await login(page);
+    await page.goto('/');
+
     await page.setViewportSize({ width: 375, height: 667 });
     const navbarBrand = page.locator('.navbar-brand');
     await expect(navbarBrand).toBeVisible();
-
-    await login(page);
 
     await expect(page.locator('.navbar-brand')).toContainText('PonyRacer');
     const navbarLink = page.locator('.nav-link').filter({ hasText: 'Races' });
@@ -62,6 +56,7 @@ test.describe('Home page', () => {
 
   test('should display the logged in user in navbar and logout', async ({ page }) => {
     await login(page);
+    await page.goto('/');
 
     await expect(page).toHaveURL('/');
     const navbarLink = page.locator('.nav-link');
@@ -83,6 +78,10 @@ test.describe('Home page', () => {
 
     // user is not displayed in navbar
     await expect(currentUser).not.toBeAttached();
+
+    // and localStorage should be empty
+    const rememberMe = await page.evaluate(() => window.localStorage.getItem('rememberMe'));
+    expect(rememberMe).toBeNull();
 
     // and home page offers the login link
     await expect(page.locator('.btn-primary').filter({ hasText: 'Login' })).toHaveAttribute('href', '/login');
