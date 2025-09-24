@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Race } from '../race/race';
 import { RaceService } from '../race-service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'pr-races',
-  imports: [Race],
+  imports: [Race, RouterLink],
   templateUrl: './races.html',
   styleUrl: './races.css'
 })
