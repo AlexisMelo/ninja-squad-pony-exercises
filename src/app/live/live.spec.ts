@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
+import { ComponentFixtureAutoDetect, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { By } from '@angular/platform-browser';
-import { of, Subject } from 'rxjs';
+import { EMPTY, of, Subject } from 'rxjs';
 import { RaceService } from '../race-service';
-import { PonyModel } from '../models/pony.model';
+import { PonyModel, PonyWithPositionModel } from '../models/pony.model';
 import { LiveRaceModel, RaceModel } from '../models/race.model';
 import { Pony } from '../pony/pony';
 import { Live } from './live';
@@ -18,6 +18,7 @@ import { Live } from './live';
 class PonyStub {
   readonly ponyModel = input.required<PonyModel>();
   readonly isRunning = input(false);
+  readonly isBoosted = input(false);
 }
 
 describe('Live', () => {
@@ -31,7 +32,7 @@ describe('Live', () => {
   } as RaceModel;
 
   beforeEach(() => {
-    raceService = jasmine.createSpyObj<RaceService>('RaceService', ['get', 'live']);
+    raceService = jasmine.createSpyObj<RaceService>('RaceService', ['get', 'live', 'boost']);
     TestBed.configureTestingModule({
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true },
@@ -60,7 +61,7 @@ describe('Live', () => {
     // there is no flag displayed as the race is PENDING
     expect(harness.routeNativeElement!.querySelector('.fa-flag')).toBeNull();
 
-    liveRace.next({ status: 'RUNNING', ponies: [{ id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 0 }] });
+    liveRace.next({ status: 'RUNNING', ponies: [{ id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 0, boosted: false }] });
     await harness.fixture.whenStable();
 
     // there is a flag displayed as the race is RUNNING
@@ -143,9 +144,9 @@ describe('Live', () => {
     liveRace.next({
       status: 'RUNNING',
       ponies: [
-        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10 },
-        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 10 },
-        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9 }
+        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10, boosted: false },
+        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 10, boosted: false },
+        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9, boosted: false }
       ]
     });
     await harness.fixture.whenStable();
@@ -185,9 +186,9 @@ describe('Live', () => {
     liveRace.next({
       status: 'FINISHED',
       ponies: [
-        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 101 },
-        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 100 },
-        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9 }
+        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 101, boosted: false },
+        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 100, boosted: false },
+        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9, boosted: false }
       ]
     });
     liveRace.complete();
@@ -227,9 +228,9 @@ describe('Live', () => {
     liveRace.next({
       status: 'FINISHED',
       ponies: [
-        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 101 },
-        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 100 },
-        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9 }
+        { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 101, boosted: false },
+        { id: 2, name: 'Pinkie Pie', color: 'GREEN', position: 100, boosted: false },
+        { id: 3, name: 'Awesome Fridge', color: 'YELLOW', position: 9, boosted: false }
       ]
     });
     liveRace.complete();
@@ -292,4 +293,167 @@ describe('Live', () => {
     const alert = element.querySelector('div.alert.alert-danger')!;
     expect(alert.textContent).toContain('A problem occurred during the live.');
   });
+
+  it('should buffer clicks over a second and call the boost method', fakeAsync(async () => {
+    const pony: PonyWithPositionModel = { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10, boosted: false };
+    raceService.get.and.returnValue(of({ ...race, status: 'RUNNING', ponies: [pony] }));
+    raceService.boost.and.returnValue(of(undefined));
+    const liveRace = new Subject<LiveRaceModel>();
+    raceService.live.and.returnValue(liveRace);
+
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/12/live', Live);
+
+    liveRace.next({ status: 'RUNNING', ponies: [pony] });
+    await harness.fixture.whenStable();
+
+    // when 5 clicks are emitted in a second
+    const ponyComponent = harness.routeDebugElement!.query(By.directive(PonyStub));
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // then we should call the boost method
+    expect(raceService.boost).toHaveBeenCalledWith(race.id, pony.id);
+    raceService.boost.calls.reset();
+
+    // when 5 clicks are emitted over 2 seconds
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // then we should not call the boost method
+    expect(raceService.boost).not.toHaveBeenCalled();
+  }));
+
+  it('should filter click buffer that are not at least 5', fakeAsync(async () => {
+    const pony: PonyWithPositionModel = { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10, boosted: false };
+    const pony2: PonyWithPositionModel = { id: 2, name: 'Black Friday', color: 'GREEN', position: 11, boosted: false };
+    raceService.get.and.returnValue(of({ ...race, status: 'RUNNING', ponies: [pony, pony2] }));
+    raceService.boost.and.returnValue(of(undefined));
+    raceService.live.and.returnValue(EMPTY);
+    const liveRace = new Subject<LiveRaceModel>();
+    raceService.live.and.returnValue(liveRace);
+
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/12/live', Live);
+
+    liveRace.next({ status: 'RUNNING', ponies: [pony, pony2] });
+    await harness.fixture.whenStable();
+
+    // when 4 clicks are emitted in a second
+    const ponyComponent = harness.routeDebugElement!.query(By.directive(PonyStub));
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // then we should not call the boost method
+    expect(raceService.boost).not.toHaveBeenCalled();
+
+    // when 5 clicks are emitted over a second on two ponies
+    const pony2Component = harness.routeDebugElement!.queryAll(By.directive(PonyStub)).at(1)!;
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    pony2Component.triggerEventHandler('ponySelected', pony2);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    pony2Component.triggerEventHandler('ponySelected', pony2);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // then we should not call the boost method
+    expect(raceService.boost).not.toHaveBeenCalled();
+  }));
+
+  it('should throttle repeated boosts', fakeAsync(async () => {
+    const pony: PonyWithPositionModel = { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10, boosted: false };
+    raceService.get.and.returnValue(of({ ...race, status: 'RUNNING', ponies: [pony] }));
+    raceService.boost.and.returnValue(of(undefined));
+    const liveRace = new Subject<LiveRaceModel>();
+    raceService.live.and.returnValue(liveRace);
+
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/12/live', Live);
+
+    liveRace.next({ status: 'RUNNING', ponies: [pony] });
+    await harness.fixture.whenStable();
+
+    // when 5 clicks are emitted in a second
+    const ponyComponent = harness.routeDebugElement!.query(By.directive(PonyStub));
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(800);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(200);
+
+    // then we should call the boost method
+    expect(raceService.boost).toHaveBeenCalled();
+    raceService.boost.calls.reset();
+
+    // when 2 other clicks are emitted
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(800);
+
+    // then we should not call the boost method with the throttling
+    expect(raceService.boost).not.toHaveBeenCalled();
+
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(200);
+
+    // we should call it a bit later
+    expect(raceService.boost).toHaveBeenCalled();
+  }));
+
+  it('should catch a boost error', fakeAsync(async () => {
+    const pony: PonyWithPositionModel = { id: 1, name: 'Sunny Sunday', color: 'BLUE', position: 10, boosted: false };
+    raceService.get.and.returnValue(of({ ...race, status: 'RUNNING', ponies: [pony] }));
+    const boost = new Subject<void>();
+    raceService.boost.and.returnValue(boost);
+    const liveRace = new Subject<LiveRaceModel>();
+    raceService.live.and.returnValue(liveRace);
+
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/12/live', Live);
+
+    liveRace.next({ status: 'RUNNING', ponies: [pony] });
+    await harness.fixture.whenStable();
+
+    // when 5 clicks are emitted in a second
+    const ponyComponent = harness.routeDebugElement!.query(By.directive(PonyStub));
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // then we should call the boost method
+    expect(raceService.boost).toHaveBeenCalled();
+    raceService.boost.calls.reset();
+    boost.error('You should catch a potential error from the boost method with a `catch` operator');
+
+    // when 5 other clicks are emitted
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    ponyComponent.triggerEventHandler('ponySelected', pony);
+    tick(1000);
+
+    // we should call it again if the previous error has been handled
+    expect(raceService.boost).toHaveBeenCalled();
+  }));
 });

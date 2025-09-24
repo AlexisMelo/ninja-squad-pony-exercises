@@ -61,4 +61,18 @@ describe('Pony', () => {
     expect(image).withContext('You should have an image for the pony').not.toBeNull();
     expect(image.getAttribute('src')).withContext('The `src` attribute of the image is not correct').toBe('images/pony-purple-running.gif');
   });
+
+  it('should display a boosted pony', async () => {
+    const isBoosted = signal(true);
+    const fixture = TestBed.createComponent(Pony, {
+      bindings: [inputBinding('ponyModel', ponyModel), inputBinding('isBoosted', isBoosted)]
+    });
+    await fixture.whenStable();
+
+    // then we should have an image with a boosted pony
+    const element = fixture.nativeElement as HTMLElement;
+    const image = element.querySelector('img')!;
+    expect(image).withContext('You should have an image for the pony').not.toBeNull();
+    expect(image.getAttribute('src')).withContext('The `src` attribute of the image is not correct').toBe('images/pony-purple-rainbow.gif');
+  });
 });

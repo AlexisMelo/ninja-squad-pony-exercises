@@ -36,6 +36,12 @@ test.describe('Live page', () => {
       });
     });
 
+    await page.route('**/api/races/12/boosts', async route => {
+      await route.fulfill({
+        status: 200
+      });
+    });
+
     await page.routeWebSocket('**/ws', ws => {
       mockWebSocket = ws;
       ws.onMessage(message => {
@@ -103,6 +109,37 @@ test.describe('Live page', () => {
     // it should have a left margin set to position - 5%
     const firstPonyLeftMargin = await ponies.first().evaluate(pony => pony.style.marginLeft);
     await expect(firstPonyLeftMargin).toBe('25%');
+
+    // boost a pony by clicking 5 times on it
+    const boostResponse = page.waitForResponse('**/api/races/12/boosts');
+    const pony = ponies.first();
+    await pony.click();
+    await pony.click();
+    await pony.click();
+    await pony.click();
+    await pony.click();
+    await boostResponse;
+
+    mockWebSocket?.send(
+      WebstompClient.Frame.marshall(
+        'MESSAGE',
+        headers,
+        JSON.stringify({
+          ponies: [
+            { id: 1, name: 'Gentle Pie', color: 'YELLOW', position: 30, boosted: true },
+            { id: 2, name: 'Big Soda', color: 'ORANGE', position: 80 },
+            { id: 3, name: 'Gentle Bottle', color: 'PURPLE', position: 70 },
+            { id: 4, name: 'Superb Whiskey', color: 'GREEN', position: 60 },
+            { id: 5, name: 'Fast Rainbow', color: 'BLUE', position: 30 }
+          ],
+          status: 'RUNNING'
+        })
+      )
+    );
+
+    // the image source should have a -rainbow suffix
+    const img = pony.locator('img');
+    await expect(img).toHaveAttribute('src', /-rainbow/);
   });
 
   test('should display a finished race', async ({ page }) => {

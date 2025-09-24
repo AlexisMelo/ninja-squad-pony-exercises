@@ -1,1 +1,1 @@
-{"pack":"81","id":24,"title":"Observable tips and tricks","specs":[{"name":"src/app/live/live.spec.ts","hash":"60dd161afd0f3f5da4d43137f69e08ac4f52ac77b47e3155997078b014f99ad3"}]}
+{"pack":"81","id":25,"title":"Boost a pony","specs":[{"name":"src/app/race-service.spec.ts","hash":"ff3deb8e654d517f6f0adc14702c4dee611be35bf5aba1923bb96561a2ef8001"},{"name":"src/app/pony/pony.spec.ts","hash":"c4132c9b3161091af0f18d5392a65445a0937b8d707b81f0b8e1b8eb91866607"},{"name":"src/app/live/live.spec.ts","hash":"1d59961bd1267232c003eada8273a092bc857b72d25e66f7ceb34ae16df2e8d1"}]}

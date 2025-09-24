@@ -3,7 +3,21 @@ import { ActivatedRoute } from '@angular/router';
 import { RaceModel } from '../models/race.model';
 import { RaceService } from '../race-service';
 import { PonyWithPositionModel } from '../models/pony.model';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import {
+  bufferToggle,
+  catchError,
+  EMPTY,
+  filter,
+  groupBy,
+  interval,
+  map,
+  mergeMap,
+  of,
+  startWith,
+  Subject,
+  switchMap,
+  throttleTime
+} from 'rxjs';
 import { Pony } from '../pony/pony';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FromNowPipe } from '../from-now-pipe';
@@ -51,6 +65,11 @@ export class Live {
   });
 
   /**
+   * Gestion des clicks sur les poneys
+   */
+  private clickSubject = new Subject<PonyWithPositionModel>();
+
+  /**
    * Constructeur
    */
   constructor() {
@@ -72,5 +91,24 @@ export class Live {
       .subscribe({
         next: race => this.raceModel.set(race)
       });
+
+    this.clickSubject
+      .pipe(
+        groupBy(pony => pony.id, { element: pony => pony.id }),
+        mergeMap(obs => obs.pipe(bufferToggle(obs, () => interval(1000)))),
+        filter(b => b.length >= 5),
+        throttleTime(1000),
+        map(b => b[0]),
+        switchMap(ponyId => this.raceService.boost(raceId, ponyId).pipe(catchError(() => EMPTY)))
+      )
+      .subscribe();
+  }
+
+  /**
+   * Lors de la sélection d'un poney
+   * @param pony
+   */
+  protected onSelection(pony: PonyWithPositionModel) {
+    this.clickSubject.next(pony);
   }
 }
