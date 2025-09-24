@@ -1,24 +1,24 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Subject } from 'rxjs';
 import { environment } from '../environments/environment';
 import { RaceService } from './race-service';
+import { WsService } from './ws-service';
 import { LiveRaceModel, RaceModel } from './models/race.model';
 
 describe('RaceService', () => {
   let raceService: RaceService;
   let http: HttpTestingController;
+  const wsService = jasmine.createSpyObj<WsService>('WsService', ['connect']);
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: WsService, useValue: wsService }]
     });
     raceService = TestBed.inject(RaceService);
     http = TestBed.inject(HttpTestingController);
-    jasmine.clock().install();
   });
-
-  afterEach(() => jasmine.clock().uninstall());
 
   afterAll(() => http.verify());
 
@@ -75,57 +75,77 @@ describe('RaceService', () => {
     expect(called).toBe(true);
   });
 
-  it('should return a live race every second', () => {
+  it('should return a live race from websockets', () => {
     const raceId = 1;
+    const messages = new Subject<LiveRaceModel>();
     let race: LiveRaceModel | undefined;
-    let counter = 0;
+
+    wsService.connect.and.returnValue(messages);
 
     raceService.live(raceId).subscribe(liveRace => {
       race = liveRace;
-      counter++;
     });
 
-    expect(race).withContext('The observable should only emit after 1 second').toBeUndefined();
+    expect(wsService.connect).toHaveBeenCalledWith(`/race/${raceId}`);
 
-    // emulates the 1 second delay
-    jasmine.clock().tick(1000);
-    expect(race).withContext('The observable should have emitted after a 1 second interval').toBeDefined();
-    expect(race!.ponies.length).withContext('The observable should have emitted after a 1 second interval').toBe(5);
-    let position = race!.ponies[0];
-    expect(position.name).toBe('Superb Runner');
-    expect(position.color).toBe('BLUE');
-    expect(position.position).toBe(0);
-    jasmine.clock().tick(1000);
+    messages.next({
+      status: 'RUNNING',
+      ponies: [
+        {
+          id: 1,
+          name: 'Superb Runner',
+          color: 'BLUE',
+          position: 1
+        }
+      ]
+    });
+    expect(race).toBeDefined();
+    expect(race!.status).toBe('RUNNING');
+    expect(race!.ponies.length).toBe(1);
+    expect(race!.ponies[0].position).toBe(1);
 
-    expect(race!.ponies.length).toBe(5);
-    position = race!.ponies[1];
-    expect(position.name).toBe('Awesome Fridge');
-    expect(position.color).toBe('GREEN');
-    expect(position.position).toBe(1);
+    messages.next({
+      status: 'RUNNING',
+      ponies: [
+        {
+          id: 1,
+          name: 'Superb Runner',
+          color: 'BLUE',
+          position: 99
+        }
+      ]
+    });
+    expect(race!.status).toBe('RUNNING');
+    expect(race!.ponies.length).toBe(1);
+    expect(race!.ponies[0].position).toBe(99);
 
-    // emulates the 100 seconds of the race
-    while (counter < 100) {
-      jasmine.clock().tick(1000);
-    }
+    messages.next({
+      status: 'FINISHED',
+      ponies: [
+        {
+          id: 1,
+          name: 'Superb Runner',
+          color: 'BLUE',
+          position: 100
+        }
+      ]
+    });
+    expect(race!.status).toBe('FINISHED');
+    expect(race!.ponies[0].position).toBe(100);
 
-    expect(race!.ponies.length).toBe(5);
-    position = race!.ponies[2];
-    expect(position.name).toBe('Great Bottle');
-    expect(position.color).toBe('ORANGE');
-    expect(position.position).toBe(99);
-
-    jasmine.clock().tick(1000);
-    expect(race!.ponies.length).toBe(5);
-    position = race!.ponies[3];
-    expect(position.name).toBe('Little Flower');
-    expect(position.color).toBe('YELLOW');
-    expect(position.position).toBe(100);
-
-    jasmine.clock().tick(1000);
-    expect(race!.ponies.length).toBe(5);
-    position = race!.ponies[4];
-    expect(position.name).toBe('Nice Rock');
-    expect(position.color).toBe('PURPLE');
-    expect(position.position).toBe(100);
+    // we should not receive any more messages
+    messages.next({
+      status: 'FINISHED',
+      ponies: [
+        {
+          id: 1,
+          name: 'Superb Runner',
+          color: 'BLUE',
+          position: 101
+        }
+      ]
+    });
+    expect(race!.status).toBe('FINISHED');
+    expect(race!.ponies[0].position).toBe(100);
   });
 });
