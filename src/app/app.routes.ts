@@ -4,6 +4,7 @@ import { Races } from './races/races';
 import { Login } from './login/login';
 import { Register } from './register/register';
 import { Bet } from './bet/bet';
+import { Live } from './live/live';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -11,7 +12,8 @@ export const routes: Routes = [
     path: 'races',
     children: [
       { path: '', component: Races },
-      { path: ':raceId', component: Bet }
+      { path: ':raceId', component: Bet },
+      { path: ':raceId/live', component: Live }
     ]
   },
   { path: 'login', component: Login },

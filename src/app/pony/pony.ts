@@ -9,8 +9,24 @@ import { PonyModel } from '../models/pony.model';
 export class Pony {
   readonly ponyModel = input.required<PonyModel>();
   readonly ponySelected = output<PonyModel>();
-  protected readonly ponyImageUrl = computed(() => `images/pony-${this.ponyModel().color.toLowerCase()}.gif`);
 
+  /**
+   * Indique si le poney court ou pas
+   */
+  public readonly isRunning = input<boolean>(false);
+
+  /**
+   * URL de l'image du poney
+   */
+  protected readonly ponyImageUrl = computed(() =>
+    this.isRunning()
+      ? `images/pony-${this.ponyModel().color.toLowerCase()}-running.gif`
+      : `images/pony-${this.ponyModel().color.toLowerCase()}.gif`
+  );
+
+  /**
+   * Sélectionne le poney
+   */
   protected selectPony(): void {
     this.ponySelected.emit(this.ponyModel());
   }

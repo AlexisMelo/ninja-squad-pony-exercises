@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../environments/environment';
 import { RaceService } from './race-service';
-import { RaceModel } from './models/race.model';
+import { LiveRaceModel, RaceModel } from './models/race.model';
 
 describe('RaceService', () => {
   let raceService: RaceService;
@@ -15,7 +15,10 @@ describe('RaceService', () => {
     });
     raceService = TestBed.inject(RaceService);
     http = TestBed.inject(HttpTestingController);
+    jasmine.clock().install();
   });
+
+  afterEach(() => jasmine.clock().uninstall());
 
   afterAll(() => http.verify());
 
@@ -70,5 +73,59 @@ describe('RaceService', () => {
     http.expectOne({ method: 'DELETE', url: `${environment.baseUrl}/api/races/${raceId}/bets` }).flush(null);
 
     expect(called).toBe(true);
+  });
+
+  it('should return a live race every second', () => {
+    const raceId = 1;
+    let race: LiveRaceModel | undefined;
+    let counter = 0;
+
+    raceService.live(raceId).subscribe(liveRace => {
+      race = liveRace;
+      counter++;
+    });
+
+    expect(race).withContext('The observable should only emit after 1 second').toBeUndefined();
+
+    // emulates the 1 second delay
+    jasmine.clock().tick(1000);
+    expect(race).withContext('The observable should have emitted after a 1 second interval').toBeDefined();
+    expect(race!.ponies.length).withContext('The observable should have emitted after a 1 second interval').toBe(5);
+    let position = race!.ponies[0];
+    expect(position.name).toBe('Superb Runner');
+    expect(position.color).toBe('BLUE');
+    expect(position.position).toBe(0);
+    jasmine.clock().tick(1000);
+
+    expect(race!.ponies.length).toBe(5);
+    position = race!.ponies[1];
+    expect(position.name).toBe('Awesome Fridge');
+    expect(position.color).toBe('GREEN');
+    expect(position.position).toBe(1);
+
+    // emulates the 100 seconds of the race
+    while (counter < 100) {
+      jasmine.clock().tick(1000);
+    }
+
+    expect(race!.ponies.length).toBe(5);
+    position = race!.ponies[2];
+    expect(position.name).toBe('Great Bottle');
+    expect(position.color).toBe('ORANGE');
+    expect(position.position).toBe(99);
+
+    jasmine.clock().tick(1000);
+    expect(race!.ponies.length).toBe(5);
+    position = race!.ponies[3];
+    expect(position.name).toBe('Little Flower');
+    expect(position.color).toBe('YELLOW');
+    expect(position.position).toBe(100);
+
+    jasmine.clock().tick(1000);
+    expect(race!.ponies.length).toBe(5);
+    position = race!.ponies[4];
+    expect(position.name).toBe('Nice Rock');
+    expect(position.color).toBe('PURPLE');
+    expect(position.position).toBe(100);
   });
 });

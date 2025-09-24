@@ -1,0 +1,9 @@
+@if (raceModel(); as raceModel) {
+  <h1>{{ raceModel.name }}</h1>
+
+  @for (pony of raceModel.poniesWithPosition; track pony.id) {
+    <div class="pony-wrapper" [style.marginLeft.%]="pony.position - 5" style="transition: margin-left 1s linear">
+      <pr-pony [ponyModel]="pony" [isRunning]="true" />
+    </div>
+  }
+}

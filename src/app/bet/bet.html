@@ -1,7 +1,7 @@
 @if (raceModel(); as race) {
   <div>
     <h1>{{ race.name }}</h1>
-    <p>{{ race.startInstant | fromNow }}</p>
+    <p>{{ race.startInstant | fromNow }} <a class="btn btn-primary" [routerLink]="'./live'">Watch live!</a></p>
     <div class="row">
       @for (pony of race.ponies; track pony.id) {
         <div class="col-12 col-md-2" [class.selected]="isPoneySelected(pony)">

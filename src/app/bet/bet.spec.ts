@@ -161,4 +161,16 @@ describe('Bet', () => {
     const message = element.querySelector('.alert.alert-danger')!;
     expect(message.textContent).toContain('The race is already started or finished');
   });
+
+  it('should display a link to go to live', async () => {
+    // given a race in Paris with 5 ponies
+    raceService.get.and.returnValue(of(race));
+
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/12');
+
+    const button = harness.routeNativeElement!.querySelector('a[href="/races/12/live"]')!;
+    expect(button).withContext('You should have a link to go to the live with an href `/races/id/live`').not.toBeNull();
+    expect(button.textContent).toContain('Watch live!');
+  });
 });

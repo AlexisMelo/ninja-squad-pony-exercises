@@ -30,7 +30,7 @@ describe('Pony', () => {
   });
 
   it('should emit an event on click', async () => {
-    const isPonySelected = signal(true);
+    const isPonySelected = signal(false);
     const fixture = TestBed.createComponent(Pony, {
       bindings: [inputBinding('ponyModel', ponyModel), outputBinding('ponySelected', () => isPonySelected.set(true))]
     });
@@ -46,5 +46,19 @@ describe('Pony', () => {
     figure.click();
 
     expect(isPonySelected()).withContext('You may have forgot the click handler on the `figure` element').toBeTruthy();
+  });
+
+  it('should display a running pony', async () => {
+    const isRunning = signal(true);
+    const fixture = TestBed.createComponent(Pony, {
+      bindings: [inputBinding('ponyModel', ponyModel), inputBinding('isRunning', isRunning)]
+    });
+    await fixture.whenStable();
+
+    // then we should have an image with a running pony
+    const element = fixture.nativeElement as HTMLElement;
+    const image = element.querySelector('img')!;
+    expect(image).withContext('You should have an image for the pony').not.toBeNull();
+    expect(image.getAttribute('src')).withContext('The `src` attribute of the image is not correct').toBe('images/pony-purple-running.gif');
   });
 });
