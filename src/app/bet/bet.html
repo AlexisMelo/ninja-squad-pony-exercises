@@ -11,9 +11,7 @@
     </div>
 
     @if (betFailed()) {
-      <div class="alert alert-danger alert-dismissible">
-        The race is already started or finished <button type="button" class="btn-close" aria-label="Close" (click)="resetAlert()"></button>
-      </div>
+      <pr-alert [type]="'danger'" [dismissible]="true" (closed)="resetAlert()">The race is already started or finished</pr-alert>
     }
   </div>
 }

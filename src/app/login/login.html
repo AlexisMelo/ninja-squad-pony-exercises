@@ -4,7 +4,7 @@
 
     <form [formGroup]="formGroup" (submit)="authenticate()">
       @if (authenticationFailed()) {
-        <div class="alert alert-danger">Nope, try again.</div>
+        <pr-alert [type]="'danger'" [dismissible]="false">Nope, try again</pr-alert>
       }
 
       <div class="mb-3">

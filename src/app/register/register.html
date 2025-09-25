@@ -56,6 +56,6 @@
   <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">Let's go!</button>
 
   @if (registrationFailed()) {
-    <div class="text-danger" id="registration-error">Try again with another login.</div>
+    <pr-alert [type]="'danger'" [dismissible]="false">Try again with another login.</pr-alert>
   }
 </form>

@@ -7,10 +7,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FromNowPipe } from '../from-now-pipe';
 import { Pony } from '../pony/pony';
 import { PonyModel } from '../models/pony.model';
+import { Alert } from '../alert/alert';
 
 @Component({
   selector: 'pr-bet',
-  imports: [FromNowPipe, Pony, RouterLink],
+  imports: [FromNowPipe, Pony, RouterLink, Alert],
   templateUrl: './bet.html',
   styleUrl: './bet.css'
 })

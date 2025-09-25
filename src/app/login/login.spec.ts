@@ -1,8 +1,10 @@
 import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { By } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { UserService } from '../user-service';
+import { AlertStub, useAlertStub } from '../alert/alert.spec';
 import { UserModel } from '../models/user.model';
 import { Login } from './login';
 
@@ -18,6 +20,7 @@ describe('Login', () => {
         { provide: UserService, useValue: userService }
       ]
     });
+    useAlertStub(Login);
   });
 
   it('should have a title', async () => {
@@ -130,8 +133,10 @@ describe('Login', () => {
     const subject = new Subject<UserModel>();
     userService.authenticate.and.returnValue(subject);
 
+    expect(harness.routeDebugElement!.query(By.directive(AlertStub)))
+      .withContext('You should not have an error message before trying to log in')
+      .toBeNull();
     const element = harness.routeNativeElement!;
-    expect(element.querySelector('.alert')).withContext('You should not have an error message before trying to log in').toBeNull();
     const loginInput = element.querySelector('input')!;
     expect(loginInput).withContext('You should have an input for the login').not.toBeNull();
     loginInput.value = 'login';
@@ -155,9 +160,11 @@ describe('Login', () => {
     const router = TestBed.inject(Router);
     expect(router.url).toBe('/login');
 
-    expect(element.querySelector('.alert'))
-      .withContext('You should have a div with a class `alert` to display an error message')
-      .not.toBeNull();
-    expect(element.querySelector('.alert')!.textContent).toContain('Nope, try again');
+    const alert = harness.routeDebugElement!.query(By.directive(AlertStub));
+    expect(alert).withContext('You should have an Alert to display an error message').not.toBeNull();
+    expect((alert.nativeElement as HTMLElement).textContent).toContain('Nope, try again');
+    expect((alert.componentInstance as AlertStub).type())
+      .withContext('The alert should be a danger one')
+      .toBe('danger');
   });
 });

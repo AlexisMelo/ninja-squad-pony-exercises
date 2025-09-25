@@ -21,6 +21,7 @@ import {
 import { Pony } from '../pony/pony';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FromNowPipe } from '../from-now-pipe';
+import { Alert } from '../alert/alert';
 
 interface RaceModelWithPositions extends RaceModel {
   poniesWithPosition: Array<PonyWithPositionModel>;
@@ -29,7 +30,7 @@ interface RaceModelWithPositions extends RaceModel {
 
 @Component({
   selector: 'pr-live',
-  imports: [Pony, FromNowPipe],
+  imports: [Pony, FromNowPipe, Alert],
   templateUrl: './live.html',
   styleUrl: './live.css'
 })

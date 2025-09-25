@@ -1,8 +1,10 @@
 import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import { UserService } from '../user-service';
+import { AlertStub, useAlertStub } from '../alert/alert.spec';
 import { UserModel } from '../models/user.model';
 import { Register } from './register';
 
@@ -18,6 +20,7 @@ describe('Register', () => {
         { provide: UserService, useValue: userService }
       ]
     });
+    useAlertStub(Register);
   });
 
   it('should display a form to register', async () => {
@@ -208,10 +211,11 @@ describe('Register', () => {
     const router = TestBed.inject(Router);
     expect(router.url).not.toBe('/');
     // and display the error message
-    const errorMessage = element.querySelector('#registration-error')!;
-    expect(errorMessage)
-      .withContext('You should display an error message in a div with id `registration-error` if the registration fails')
-      .not.toBeNull();
-    expect(errorMessage.textContent).toContain('Try again with another login.');
+    const errorMessage = harness.routeDebugElement!.query(By.directive(AlertStub));
+    expect(errorMessage).withContext('You should display an error message in an Alert if the registration fails').not.toBeNull();
+    expect((errorMessage.nativeElement as HTMLElement).textContent).toContain('Try again with another login.');
+    expect((errorMessage.componentInstance as AlertStub).type())
+      .withContext('The alert should be a danger one')
+      .toBe('danger');
   });
 });

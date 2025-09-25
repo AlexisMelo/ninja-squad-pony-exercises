@@ -3,6 +3,7 @@ import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, Validatio
 import { Router } from '@angular/router';
 import { UserService } from '../user-service';
 import { BirthYearInput } from '../birth-year-input/birth-year-input';
+import { Alert } from '../alert/alert';
 
 function passwordMatch(control: AbstractControl<{ password: string; confirmPassword: string }>): ValidationErrors | null {
   return control.value.password === control.value.confirmPassword ? null : { matchingError: true };
@@ -10,7 +11,7 @@ function passwordMatch(control: AbstractControl<{ password: string; confirmPassw
 
 @Component({
   selector: 'pr-register',
-  imports: [ReactiveFormsModule, BirthYearInput],
+  imports: [ReactiveFormsModule, BirthYearInput, Alert],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })

@@ -8,7 +8,7 @@
   } -->
 
   @if (raceModel.liveError) {
-    <div class="alert alert-danger">A problem occurred during the live.</div>
+    <pr-alert [type]="'danger'" [dismissible]="false">A problem occurred during the live.</pr-alert>
   }
 
   <div id="live-race">
@@ -19,9 +19,9 @@
             <div>The race is over.</div>
           } @else {
             @if (betWon()) {
-              <div class="alert alert-success">You won your bet!</div>
+              <pr-alert [type]="'success'" [dismissible]="false">You won your bet!</pr-alert>
             } @else if (raceModel.betPonyId) {
-              <div class="alert alert-warning">You lost your bet.</div>
+              <pr-alert [type]="'warning'" [dismissible]="false">You lost your bet.</pr-alert>
             }
             <div>Most Valuable Ponies</div>
             <div class="row">

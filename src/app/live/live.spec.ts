@@ -5,6 +5,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { By } from '@angular/platform-browser';
 import { EMPTY, of, Subject } from 'rxjs';
 import { RaceService } from '../race-service';
+import { AlertStub, useAlertStub } from '../alert/alert.spec';
 import { PonyModel, PonyWithPositionModel } from '../models/pony.model';
 import { LiveRaceModel, RaceModel } from '../models/race.model';
 import { Pony } from '../pony/pony';
@@ -40,6 +41,7 @@ describe('Live', () => {
         { provide: RaceService, useValue: raceService }
       ]
     });
+    useAlertStub(Live);
     TestBed.overrideComponent(Live, {
       remove: {
         imports: [Pony]
@@ -290,8 +292,16 @@ describe('Live', () => {
     await harness.fixture.whenStable();
 
     // an error occurred
-    const alert = element.querySelector('div.alert.alert-danger')!;
-    expect(alert.textContent).toContain('A problem occurred during the live.');
+    const debugElement = harness.routeDebugElement!;
+    const alert = debugElement.query(By.directive(AlertStub));
+    expect(alert).withContext('You should have an Alert to display the error').not.toBeNull();
+    expect((alert.nativeElement as HTMLElement).textContent).toContain('A problem occurred during the live.');
+    expect((alert.componentInstance as AlertStub).type())
+      .withContext('The alert should be a danger one')
+      .toBe('danger');
+    expect((alert.componentInstance as AlertStub).dismissible())
+      .withContext('The alert should not be dismissible')
+      .toBe(false);
   });
 
   it('should buffer clicks over a second and call the boost method', fakeAsync(async () => {

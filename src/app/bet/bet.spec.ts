@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { RaceService } from '../race-service';
+import { AlertStub, useAlertStub } from '../alert/alert.spec';
 import { Pony } from '../pony/pony';
 import { RaceModel } from '../models/race.model';
 import { Bet } from './bet';
@@ -33,6 +34,7 @@ describe('Bet', () => {
         { provide: RaceService, useValue: raceService }
       ]
     });
+    useAlertStub(Bet);
   });
 
   it('should display a race, its date and its ponies', async () => {
@@ -93,24 +95,28 @@ describe('Bet', () => {
 
     raceService.bet.and.callFake(() => throwError(() => new Error('Oops')));
 
-    const element = harness.routeNativeElement!;
-    expect(element.querySelector('.alert.alert-danger')).toBeNull();
+    const debugElement = harness.routeDebugElement!;
+    expect(debugElement.query(By.directive(AlertStub))).toBeNull();
 
     // bet on pony
-    const ponies = harness.routeDebugElement!.queryAll(By.directive(Pony));
+    const ponies = debugElement.queryAll(By.directive(Pony));
     const gentlePie = ponies[0].componentInstance as Pony;
     gentlePie.ponySelected.emit(race.ponies[0]);
     await harness.fixture.whenStable();
 
-    const message = element.querySelector('.alert.alert-danger')!;
-    expect(message.textContent).toContain('The race is already started or finished');
+    const message = debugElement.query(By.directive(AlertStub));
+    expect(message).withContext('You should have an Alert if the bet failed').not.toBeNull();
+    expect((message.nativeElement as HTMLElement).textContent).toContain('The race is already started or finished');
+    expect((message.componentInstance as AlertStub).type())
+      .withContext('The alert should be a danger one')
+      .toBe('danger');
 
     // close the alert
-    const alertButton = message.querySelector('button')!;
-    expect(alertButton).withContext('The message should have a close button').not.toBeNull();
-    alertButton.click();
+    (message.componentInstance as AlertStub).closed.emit();
     await harness.fixture.whenStable();
-    expect(element.querySelector('.alert.alert-danger')).withContext('Clicking on the button should close the alert').toBeNull();
+    expect(debugElement.query(By.directive(AlertStub)))
+      .withContext('The Alert should be closable')
+      .toBeNull();
   });
 
   it('should cancel a bet', async () => {
@@ -145,11 +151,11 @@ describe('Bet', () => {
 
     raceService.cancelBet.and.callFake(() => throwError(() => new Error('Oops')));
 
-    const element = harness.routeNativeElement!;
-    expect(element.querySelector('.alert.alert-danger')).toBeNull();
+    const debugElement = harness.routeDebugElement!;
+    expect(debugElement.query(By.directive(AlertStub))).toBeNull();
 
     // cancel bet on pony
-    const ponies = harness.routeDebugElement!.queryAll(By.directive(Pony));
+    const ponies = debugElement.queryAll(By.directive(Pony));
     const gentlePie = ponies[0].componentInstance as Pony;
     gentlePie.ponySelected.emit(race.ponies[0]);
     await harness.fixture.whenStable();
@@ -158,8 +164,12 @@ describe('Bet', () => {
     // we should have no element with the `selected` class
     const selectedElements = harness.routeNativeElement!.querySelectorAll('.selected');
     expect(selectedElements.length).withContext('You should have an element with the `selected` class as the canceling failed').toBe(1);
-    const message = element.querySelector('.alert.alert-danger')!;
-    expect(message.textContent).toContain('The race is already started or finished');
+    const message = debugElement.query(By.directive(AlertStub));
+    expect(message).withContext('You should have an Alert if the bet failed').not.toBeNull();
+    expect((message.nativeElement as HTMLElement).textContent).toContain('The race is already started or finished');
+    expect((message.componentInstance as AlertStub).type())
+      .withContext('The alert should be a danger one')
+      .toBe('danger');
   });
 
   it('should display a link to go to live', async () => {
