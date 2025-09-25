@@ -3,6 +3,7 @@ import { Observable, tap } from 'rxjs';
 import { UserModel } from './models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment.development';
+import { WsService } from './ws-service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,11 @@ export class UserService {
    * Utilisateur courant
    */
   public readonly currentUser = this.user.asReadonly();
+
+  /**
+   * Websockets
+   */
+  private wsService = inject(WsService);
 
   /**
    * Constructeur
@@ -78,5 +84,14 @@ export class UserService {
 
     const userUnserialized = JSON.parse(user) as UserModel;
     return userUnserialized;
+  }
+
+  /**
+   * Récupère les mises à jour de score pour un utilisateur
+   * @param userId
+   * @returns
+   */
+  scoreUpdates(userId: number) {
+    return this.wsService.connect<UserModel>(`/player/${userId}`);
   }
 }

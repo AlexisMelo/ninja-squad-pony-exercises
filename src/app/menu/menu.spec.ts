@@ -2,6 +2,7 @@ import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
 import { provideRouter, Router, RouterLink } from '@angular/router';
 import { By } from '@angular/platform-browser';
+import { of, Subject } from 'rxjs';
 import { UserService } from '../user-service';
 import { UserModel } from '../models/user.model';
 import { Menu } from './menu';
@@ -12,7 +13,7 @@ describe('Menu', () => {
 
   beforeEach(() => {
     currentUser = signal(undefined);
-    userService = jasmine.createSpyObj<UserService>('UserService', ['logout'], { currentUser });
+    userService = jasmine.createSpyObj<UserService>('UserService', ['logout', 'scoreUpdates'], { currentUser });
     TestBed.configureTestingModule({
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true },
@@ -20,6 +21,7 @@ describe('Menu', () => {
         { provide: UserService, useValue: userService }
       ]
     });
+    userService.scoreUpdates.and.returnValue(of());
   });
 
   it('should toggle the class on click', async () => {
@@ -81,6 +83,39 @@ describe('Menu', () => {
     expect(info).withContext('You should have a `span` element with the ID `current-user` to display the user info').not.toBeNull();
     expect(info.textContent).withContext('You should display the name of the user in a `span` element').toContain('cedric');
     expect(info.textContent).withContext('You should display the score of the user in a `span` element').toContain('2,000');
+  });
+
+  it('should listen to score updates', async () => {
+    const fixture = TestBed.createComponent(Menu);
+
+    // emulate a login
+    const scoreUpdates = new Subject<UserModel>();
+    userService.scoreUpdates.and.returnValue(scoreUpdates);
+    const user = { id: 1, login: 'cedric', money: 200 } as UserModel;
+    currentUser.set(user);
+    await fixture.whenStable();
+
+    expect(userService.scoreUpdates).toHaveBeenCalledWith(user.id);
+    const element = fixture.nativeElement as HTMLElement;
+    const info = element.querySelector('#current-user')!;
+    expect(info.textContent).toContain('cedric');
+    expect(info.textContent).toContain('200');
+
+    // emulate a score update
+    scoreUpdates.next({ ...user, money: 300 });
+    await fixture.whenStable();
+
+    expect(info.textContent).toContain('300');
+
+    // emulate an error
+    scoreUpdates.error('You should catch potential errors on score updates with a `.catchError()`');
+    expect(info.textContent).toContain('300');
+
+    // emulate a logout
+    currentUser.set(undefined);
+    await fixture.whenStable();
+
+    expect(info.textContent).toContain('');
   });
 
   it('should display a logout button', async () => {

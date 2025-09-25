@@ -5,6 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { App } from './app';
 import { Menu } from './menu/menu';
+import { WsService } from './ws-service';
 
 describe('App', () => {
   beforeEach(() =>
@@ -13,7 +14,11 @@ describe('App', () => {
         { provide: ComponentFixtureAutoDetect, useValue: true },
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([])
+        provideRouter([]),
+        {
+          provide: WsService,
+          useValue: jasmine.createSpyObj<WsService>('WsService', ['connect'])
+        }
       ]
     })
   );

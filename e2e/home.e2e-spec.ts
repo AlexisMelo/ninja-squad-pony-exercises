@@ -1,6 +1,10 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test, WebSocketRoute } from '@playwright/test';
+import * as WebstompClient from 'webstomp-client';
 
 test.describe('Home page', () => {
+  let mockWebSocket: WebSocketRoute | undefined;
+  let subscriptionId: string | undefined;
+
   async function login(page: Page) {
     await page.evaluate(() =>
       localStorage.setItem(
@@ -17,6 +21,20 @@ test.describe('Home page', () => {
   }
 
   test.beforeEach(async ({ page }) => {
+    await page.routeWebSocket('**/ws', ws => {
+      mockWebSocket = ws;
+      ws.onMessage(message => {
+        const unmarshalled = WebstompClient.Frame.unmarshallSingle(message as string);
+        if (unmarshalled.command === 'CONNECT') {
+          // we return a fake connection
+          ws.send(WebstompClient.Frame.marshall('CONNECTED'));
+        } else if (unmarshalled.command === 'SUBSCRIBE' && unmarshalled.headers.destination === '/player/1') {
+          // store the subscription ID
+          subscriptionId = unmarshalled.headers.id;
+        }
+      });
+    });
+
     await page.goto('/');
   });
 
@@ -85,5 +103,37 @@ test.describe('Home page', () => {
 
     // and home page offers the login link
     await expect(page.locator('.btn-primary').filter({ hasText: 'Login' })).toHaveAttribute('href', '/login');
+  });
+
+  test('should display a live score', async ({ page }) => {
+    await login(page);
+    await page.goto('/');
+
+    // user stored should be displayed with its current score
+    await page.waitForTimeout(500);
+    const currentUser = page.locator('#current-user');
+    await expect(currentUser).toContainText('1,000');
+
+    const headers = {
+      destination: '/player/1',
+      subscription: subscriptionId
+    };
+    mockWebSocket?.send(
+      WebstompClient.Frame.marshall(
+        'MESSAGE',
+        headers,
+        JSON.stringify({
+          id: 1,
+          login: 'cedric',
+          money: 1200,
+          registrationInstant: '2015-12-01T11:00:00Z',
+          token: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjF9.5cAW816GUAg3OWKWlsYyXI4w3fDrS5BpnmbyBjVM7lo'
+        })
+      )
+    );
+
+    // user should be displayed with its new live score
+    await page.waitForTimeout(500);
+    await expect(currentUser).toContainText('1,200');
   });
 });

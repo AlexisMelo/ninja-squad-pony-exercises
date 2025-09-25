@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { UserService } from '../user-service';
 import { DecimalPipe } from '@angular/common';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, EMPTY, of, startWith, switchMap } from 'rxjs';
 
 @Component({
   selector: 'pr-menu',
@@ -23,7 +25,17 @@ export class Menu {
   /**
    * Utilisateur courant
    */
-  protected user = this.userService.currentUser;
+  protected readonly user = toSignal(
+    toObservable(this.userService.currentUser).pipe(
+      switchMap(user => {
+        if (!user) return of(null);
+        return this.userService.scoreUpdates(user.id).pipe(
+          startWith(user),
+          catchError(() => EMPTY)
+        );
+      })
+    )
+  );
 
   /**
    * Gestion des routes
