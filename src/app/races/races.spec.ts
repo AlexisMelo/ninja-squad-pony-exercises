@@ -1,48 +1,79 @@
+import { signal } from '@angular/core';
 import { ComponentFixtureAutoDetect, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { Location } from '@angular/common';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { Race } from '../race/race';
 import { RaceService } from '../race-service';
-import { RaceModel } from '../models/race.model';
-import { Races } from './races';
+import { UserService } from '../user-service';
+import { UserModel } from '../models/user.model';
+import { routes } from '../app.routes';
+import { PendingRaces } from './pending-races/pending-races';
+import { FinishedRaces } from './finished-races/finished-races';
 
 describe('Races', () => {
-  let raceService: jasmine.SpyObj<RaceService>;
-
   beforeEach(() => {
-    raceService = jasmine.createSpyObj<RaceService>('RaceService', ['list']);
+    const raceService = jasmine.createSpyObj<RaceService>('RaceService', ['list']);
+    const userService = jasmine.createSpyObj<UserService>('UserService', [], { currentUser: signal({} as UserModel) });
     TestBed.configureTestingModule({
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true },
-        provideRouter([]),
-        { provide: RaceService, useValue: raceService }
+        provideRouter(routes),
+        { provide: RaceService, useValue: raceService },
+        { provide: UserService, useValue: userService }
       ]
     });
-    raceService.list.and.returnValue(
-      of([
-        { id: 1, name: 'Tokyo', startInstant: '2024-02-18T08:03:00' },
-        { id: 2, name: 'Paris', startInstant: '2024-02-18T08:04:00' }
-      ] as Array<RaceModel>)
-    );
+    raceService.list.and.returnValue(of([]));
   });
 
-  it('should display every race', async () => {
-    const fixture = TestBed.createComponent(Races);
-    await fixture.whenStable();
-    const debugElement = fixture.debugElement;
-    const races = debugElement.queryAll(By.directive(Race));
-    expect(races.length).withContext('You should have two `Race` displayed').toBe(2);
+  it('should redirect from /races to /races/pending', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races');
+
+    const location = TestBed.inject(Location);
+    expect(location.path()).withContext('You should redirect from /races to /races/pending').toBe('/races/pending');
   });
 
-  it('should display a link to bet on a race', async () => {
-    const fixture = TestBed.createComponent(Races);
-    await fixture.whenStable();
+  it('should show two tabs', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races');
 
-    const element = fixture.nativeElement as HTMLElement;
-    const raceNames = element.querySelectorAll('a');
-    expect(raceNames.length).withContext('You must have a link to go to the bet page for each race').toBe(2);
-    expect(raceNames[0].textContent).toContain('Bet on Tokyo');
-    expect(raceNames[1].textContent).toContain('Bet on Paris');
+    const tabLinks = harness.routeNativeElement!.querySelectorAll<HTMLAnchorElement>('.nav.nav-tabs .nav-item a.nav-link');
+    expect(tabLinks.length).withContext('You should have two tabs, one for pending races, one for the finished races').toBe(2);
+    expect(tabLinks[0].href).toContain('/races/pending');
+    expect(tabLinks[1].href).toContain('/races/finished');
+  });
+
+  it('should have make first tab active when showing pending races', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races');
+
+    const links = harness.routeNativeElement!.querySelectorAll<HTMLAnchorElement>('a.nav-link');
+    expect(links.length).withContext('You must have two links').toBe(2);
+    expect(links[0].className).withContext('The first link should be active').toContain('active');
+    expect(links[1].className).withContext('The second link should not be active').not.toContain('active');
+  });
+
+  it('should have make second tab active when showing finished races', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/races/finished');
+
+    const links = harness.routeNativeElement!.querySelectorAll<HTMLAnchorElement>('a.nav-link');
+    expect(links.length).withContext('You must have two links').toBe(2);
+    expect(links[0].className).withContext('The first link should not be active').not.toContain('active');
+    expect(links[1].className).withContext('The second link should be active').toContain('active');
+  });
+
+  it('should display pending races for /races/pending and finished races for /races/finished', async () => {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/races/pending');
+    const pendingRaces = harness.routeDebugElement!.query(By.directive(PendingRaces));
+    expect(pendingRaces).withContext('You should have a PendingRaces for the /races/pending route').not.toBeNull();
+
+    await harness.navigateByUrl('/races/finished');
+    const finishedRaces = harness.routeDebugElement!.query(By.directive(FinishedRaces));
+    expect(finishedRaces).withContext('You should have a FinishedRaces for the /races/finished route').not.toBeNull();
   });
 });

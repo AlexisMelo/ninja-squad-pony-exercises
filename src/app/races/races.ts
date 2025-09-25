@@ -1,15 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { Race } from '../race/race';
-import { RaceService } from '../race-service';
-import { RouterLink } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'pr-races',
-  imports: [Race, RouterLink],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './races.html',
   styleUrl: './races.css'
 })
-export class Races {
-  protected readonly races = toSignal(inject(RaceService).list());
-}
+export class Races {}

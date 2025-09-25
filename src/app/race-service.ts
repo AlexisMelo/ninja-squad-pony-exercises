@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, takeWhile } from 'rxjs';
 import { environment } from '../environments/environment';
-import { LiveRaceModel, RaceModel } from './models/race.model';
+import { LiveRaceModel, RaceModel, RaceStatus } from './models/race.model';
 import { WsService } from './ws-service';
 
 @Injectable({ providedIn: 'root' })
@@ -21,8 +21,8 @@ export class RaceService {
    * Obtenir la liste de toutes les courses
    * @returns
    */
-  list(): Observable<Array<RaceModel>> {
-    const params = { status: 'PENDING' };
+  list(status: RaceStatus): Observable<Array<RaceModel>> {
+    const params = { status };
     return this.http.get<Array<RaceModel>>('https://ponyracer.ninja-squad.com/api/races', { params });
   }
 

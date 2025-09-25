@@ -56,7 +56,14 @@ test.describe('Races page', () => {
     await page.goto('/races');
     await racePromise;
 
+    // redirected to pending races
+    await expect(page).toHaveURL('/races/pending');
+
     // now we can see the list
+    const pendingRacesTab = () => page.locator('.nav-tabs .nav-link').first();
+    const finishedRacesTab = () => page.locator('.nav-tabs .nav-link').nth(1);
+    await expect(pendingRacesTab()).toHaveClass(/active/);
+    await expect(finishedRacesTab()).not.toHaveClass(/active/);
     await expect(page.locator('h2')).toHaveCount(2);
     const paragraphs = page.locator('p');
     await expect(paragraphs).toHaveCount(2);
@@ -64,5 +71,13 @@ test.describe('Races page', () => {
     await expect(page.locator('figure')).toHaveCount(10);
     await expect(page.locator('img')).toHaveCount(10);
     await expect(page.locator('figcaption')).toHaveCount(10);
+
+    // click on the finished races tab
+    const finishedRacesPromise = page.waitForResponse('**/api/races?status=FINISHED');
+    await finishedRacesTab().click();
+    await finishedRacesPromise;
+    await expect(page).toHaveURL('/races/finished');
+    await expect(pendingRacesTab()).not.toHaveClass(/active/);
+    await expect(finishedRacesTab()).toHaveClass(/active/);
   });
 });

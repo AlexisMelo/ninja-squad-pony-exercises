@@ -1,6 +1,11 @@
-@for (race of races(); track race.id) {
-  <div>
-    <pr-race [raceModel]="race" />
-    <a class="btn btn-primary" [routerLink]="'/races/' + race.id">Bet on {{ race.name }}</a>
-  </div>
-}
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" routerLinkActive="active" routerLink="pending">Pending Races</a>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" routerLinkActive="active" routerLink="finished">Finished Races</a>
+  </li>
+</ul>
+
+<router-outlet />
