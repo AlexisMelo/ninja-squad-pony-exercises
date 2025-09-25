@@ -5,11 +5,13 @@ import { Login } from './login/login';
 import { Register } from './register/register';
 import { Bet } from './bet/bet';
 import { Live } from './live/live';
+import { loggedInGuard } from './logged-in-guard';
 
 export const routes: Routes = [
   { path: '', component: Home },
   {
     path: 'races',
+    canActivate: [loggedInGuard],
     children: [
       { path: '', component: Races },
       { path: ':raceId', component: Bet },

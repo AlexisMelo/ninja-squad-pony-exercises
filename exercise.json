@@ -1,1 +1,1 @@
-{"pack":"81","id":26,"title":"Reactive user score","specs":[{"name":"src/app/user-service.spec.ts","hash":"d21159350939dc8ac27c634a9b7e75bba3d4ff50b7e7ef0a058eeead083af077"},{"name":"src/app/app.spec.ts","hash":"39a591870aec50bc6938b3da221841015e0f733caca48e75b7a0b0aa40875ff6"},{"name":"src/app/menu/menu.spec.ts","hash":"3a3d1f683015bfffff725b0bf937e00f6cd8ffc10ffddd92e04b044ed6006ea9"}]}
+{"pack":"81","id":28,"title":"Protected routes with guards","specs":[{"name":"src/app/logged-in-guard.spec.ts","hash":"a68f73f75e59b65b6aa37f26a4713f06a166d5bba8b240a602cfc9fec15fc7a5"}]}

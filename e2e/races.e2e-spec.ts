@@ -14,6 +14,14 @@ test.describe('Races page', () => {
     startInstant: '2020-02-18T08:02:00Z'
   };
 
+  const user = {
+    id: 1,
+    login: 'cedric',
+    money: 1000,
+    registrationInstant: '2015-12-01T11:00:00Z',
+    token: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjF9.5cAW816GUAg3OWKWlsYyXI4w3fDrS5BpnmbyBjVM7lo'
+  };
+
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/races?status=PENDING', async route => {
       await route.fulfill({
@@ -39,13 +47,20 @@ test.describe('Races page', () => {
   });
 
   test('should display a race list', async ({ page }) => {
+    // not logged, so redirected
+    await expect(page).toHaveURL('/');
+
+    // store the user in localStorage
+    await page.evaluate(user => localStorage.setItem('rememberMe', JSON.stringify(user)), user);
+    const racePromise = page.waitForResponse('**/api/races?status=PENDING');
+    await page.goto('/races');
+    await racePromise;
+
+    // now we can see the list
     await expect(page.locator('h2')).toHaveCount(2);
     const paragraphs = page.locator('p');
     await expect(paragraphs).toHaveCount(2);
     await expect(paragraphs.first()).toContainText('ago');
-  });
-
-  test('should display ponies', async ({ page }) => {
     await expect(page.locator('figure')).toHaveCount(10);
     await expect(page.locator('img')).toHaveCount(10);
     await expect(page.locator('figcaption')).toHaveCount(10);
