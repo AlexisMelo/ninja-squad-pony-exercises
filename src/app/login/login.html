@@ -7,16 +7,16 @@
         <pr-alert [type]="'danger'" [dismissible]="false">Nope, try again</pr-alert>
       }
 
-      <div class="mb-3">
-        <label for="login" class="form-label"></label>
+      <div class="mb-3" prFormLabelValidation>
+        <label prFormLabel for="login" class="form-label"></label>
         <input type="text" id="login" formControlName="login" class="form-control" />
         @if (formGroup.controls.login.dirty && formGroup.controls.login.hasError('required')) {
           <div class="invalid-feedback">Login is required</div>
         }
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label"></label>
+      <div class="mb-3" prFormLabelValidation>
+        <label prFormLabel for="password" class="form-label"></label>
         <input type="password" id="password" formControlName="password" class="form-control" />
         @if (formGroup.controls.password.dirty && formGroup.controls.password.hasError('required')) {
           <div class="invalid-feedback">Password is required</div>

@@ -1,9 +1,10 @@
 import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
+import { FormControlValidation } from '../form-control-validation';
 
 @Component({
   selector: 'pr-birth-year-input',
-  imports: [],
+  imports: [FormControlValidation],
   templateUrl: './birth-year-input.html',
   styleUrl: './birth-year-input.css',
   providers: [

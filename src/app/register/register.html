@@ -1,6 +1,6 @@
 <form [formGroup]="userForm" (ngSubmit)="register()">
-  <div class="mb-3">
-    <label for="login" class="form-label">Login</label>
+  <div class="mb-3" prFormLabelValidation>
+    <label prFormLabel for="login" class="form-label">Login</label>
     <input type="text" id="login" class="form-control" formControlName="login" />
     @if (userForm.controls.login.dirty) {
       @if (userForm.controls.login.hasError('required')) {
@@ -13,8 +13,8 @@
   </div>
 
   <div formGroupName="passwordGroup">
-    <div class="mb-3">
-      <label for="password" class="form-label">Password</label>
+    <div class="mb-3" prFormLabelValidation>
+      <label prFormLabel for="password" class="form-label">Password</label>
       <input type="password" id="password" class="form-control" formControlName="password" />
       @if (
         userForm.controls.passwordGroup.controls.password.dirty && userForm.controls.passwordGroup.controls.password.hasError('required')
@@ -23,8 +23,8 @@
       }
     </div>
 
-    <div class="mb-3">
-      <label for="confirmPassword" class="form-label">Confirm Password</label>
+    <div class="mb-3" prFormLabelValidation>
+      <label prFormLabel for="confirmPassword" class="form-label">Confirm Password</label>
       <input type="password" id="confirmPassword" class="form-control" formControlName="confirmPassword" />
       @if (
         userForm.controls.passwordGroup.controls.confirmPassword.dirty &&
@@ -39,8 +39,8 @@
     }
   </div>
 
-  <div class="mb-3">
-    <label for="birthYear" class="form-label">Birth Year</label>
+  <div class="mb-3" prFormLabelValidation>
+    <label prFormLabel for="birthYear" class="form-label">Birth Year</label>
     <pr-birth-year-input class="form-control" inputId="birthYear" formControlName="birthYear" />
 
     @if (userForm.controls.birthYear.dirty) {

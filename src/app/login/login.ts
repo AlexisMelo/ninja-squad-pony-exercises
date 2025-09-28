@@ -3,10 +3,11 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { UserService } from '../user-service';
 import { Router } from '@angular/router';
 import { Alert } from '../alert/alert';
+import { FormControlValidation } from '../form-control-validation';
 
 @Component({
   selector: 'pr-login',
-  imports: [ReactiveFormsModule, Alert],
+  imports: [ReactiveFormsModule, Alert, FormControlValidation],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })

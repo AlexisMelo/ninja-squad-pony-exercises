@@ -5,8 +5,3 @@
 .invalid-feedback {
   display: block;
 }
-
-input.ng-dirty.ng-invalid,
-pr-birth-year-input.ng-dirty.ng-invalid input {
-  border: 1px solid red;
-}
